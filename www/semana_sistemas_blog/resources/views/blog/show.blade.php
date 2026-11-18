@@ -1,61 +1,75 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' - Semana de Sistemas 2026')
+{{-- layouts.base ya agrega " | Semana de Sistemas 2026" al final --}}
+@section('title', $post->title)
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            <a href="{{ route('blog.index') }}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Volver a todas las actividades</a>
+<div class="row justify-content-center">
+    <div class="col-lg-9">
 
-            <article class="card border-0 shadow-sm overflow-hidden">
-                @if($post->main_image)
-                    <img src="{{ asset('storage/' . $post->main_image) }}" class="w-100" alt="{{ $post->title }}" style="max-height: 440px; object-fit: cover;">
-                @endif
+        <a href="{{ route('blog.index') }}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left me-1"></i>Volver a todas las actividades
+        </a>
 
-                <div class="card-body p-4 p-md-5">
-                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                        <span class="badge bg-primary fs-6">{{ $post->category->name }}</span>
-                        <span class="text-muted small">Fecha de realización: <strong>{{ $post->activity_date->format('d/m/Y') }}</strong></span>
-                    </div>
+        <article class="card shadow-sm overflow-hidden">
 
-                    <h1 class="fw-bold mb-3">{{ $post->title }}</h1>
+            @if($post->main_image)
+                <div class="ratio ratio-21x9">
+                    <img src="{{ asset('storage/' . $post->main_image) }}" class="object-fit-cover"
+                         alt="{{ $post->title }}">
+                </div>
+            @endif
 
-                    <div class="p-3 bg-light rounded border-start border-4 border-primary mb-4">
-                        <div class="small text-muted">Autores y participantes del equipo:</div>
-                        <div class="fw-semibold">{{ $post->authors }}</div>
-                    </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <span class="badge text-bg-primary fs-6">{{ $post->category->name }}</span>
+                    <span class="text-body-secondary small">
+                        Fecha de realización: <strong>{{ $post->activity_date->format('d/m/Y') }}</strong>
+                    </span>
+                </div>
 
-                    <div class="fs-5 lh-lg mb-5" style="white-space: pre-line;">
-                        {{ $post->content }}
-                    </div>
+                <h1 class="fw-bold mb-3">{{ $post->title }}</h1>
 
-                    @if($post->images->count() > 0)
-                        <hr class="my-4">
-                        <h4 class="fw-bold mb-1">Evidencias de Participación Individual</h4>
-                        <p class="text-muted small mb-4">Registro fotográfico y comprobantes de asistencia de los integrantes del equipo.</p>
+                <div class="p-3 bg-body-tertiary rounded border-start border-4 border-primary mb-4">
+                    <div class="small text-body-secondary">Autores y participantes del equipo:</div>
+                    <div class="fw-semibold">{{ $post->authors }}</div>
+                </div>
 
-                        <div class="row g-3">
-                            @foreach($post->images as $image)
-                                <div class="col-md-6">
-                                    <div class="card h-100 border">
-                                        <a href="{{ asset('storage/' . $image->image_path) }}" target="_blank">
-                                            <img src="{{ asset('storage/' . $image->image_path) }}" class="card-img-top" alt="Evidencia de {{ $image->participant_name }}" style="height: 240px; object-fit: cover;">
-                                        </a>
-                                        <div class="card-body bg-light">
-                                            <span class="badge bg-dark mb-1">{{ $image->participant_name }}</span>
-                                            @if($image->caption)
-                                                <p class="card-text small text-muted mb-0">{{ $image->caption }}</p>
-                                            @endif
-                                        </div>
+                {{-- nl2br(e(...)) respeta los saltos de línea del texto y escapa el HTML --}}
+                <div class="fs-5 lh-lg mb-5">
+                    {!! nl2br(e($post->content)) !!}
+                </div>
+
+                @if($post->images->count() > 0)
+                    <hr class="my-4">
+                    <h4 class="fw-bold mb-1">Evidencias de participación individual</h4>
+                    <p class="text-body-secondary small mb-4">
+                        Registro fotográfico y comprobantes de asistencia de los integrantes del equipo.
+                    </p>
+
+                    <div class="row g-3">
+                        @foreach($post->images as $image)
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <a href="{{ asset('storage/' . $image->image_path) }}" target="_blank"
+                                       rel="noopener" class="ratio ratio-4x3">
+                                        <img src="{{ asset('storage/' . $image->image_path) }}"
+                                             class="card-img-top object-fit-cover"
+                                             alt="Evidencia de {{ $image->participant_name }}">
+                                    </a>
+                                    <div class="card-body bg-body-tertiary">
+                                        <span class="badge text-bg-secondary mb-1">{{ $image->participant_name }}</span>
+                                        @if($image->caption)
+                                            <p class="card-text small text-body-secondary mb-0">{{ $image->caption }}</p>
+                                        @endif
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </article>
-        </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </article>
     </div>
 </div>
 @endsection

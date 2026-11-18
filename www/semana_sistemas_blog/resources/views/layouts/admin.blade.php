@@ -1,63 +1,84 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Panel Admin - Semana de Sistemas 2026')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ route('admin.dashboard') }}">Admin | Semana de Sistemas 2026</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="adminNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.posts.*') ? 'active' : '' }}" href="{{ route('admin.posts.index') }}">Entradas (Posts)</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">Categorías</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center text-white gap-3">
-                    <span class="small">{{ Auth::user()->name }}</span>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
-                    </form>
+{{-- Layout del área administrativa: dashboard, posts/* y categories/* --}}
+{{-- OJO: admin/auth/login NO usa este layout (no hay sesión). Usa layouts.base --}}
+@extends('layouts.base')
+
+@section('body')
+    @php
+        // AJUSTA los nombres a los de tu routes/web.php.
+        $link = fn (string $name, array $params = []) => Route::has($name) ? route($name, $params) : '#';
+
+        $menu = [
+            ['label' => 'Panel',      'route' => 'admin.dashboard',        'active' => 'admin.dashboard'],
+            ['label' => 'Entradas',   'route' => 'admin.posts.index',      'active' => 'admin.posts.*'],
+            ['label' => 'Categorías', 'route' => 'admin.categories.index', 'active' => 'admin.categories.*'],
+        ];
+    @endphp
+
+    <div class="container-fluid bg-body text-body">
+        <div class="row">
+
+            {{-- ========== Sidebar (offcanvas en móvil, fijo a la pantalla en escritorio) ========== --}}
+            <aside class="col-lg-2 p-0 bg-body border-end">
+                {{-- CAMBIO 1: se agregan sticky-lg-top y vh-100 --}}
+                <div class="offcanvas-lg offcanvas-start bg-body text-body sticky-lg-top vh-100" tabindex="-1"
+                    id="adminSidebar" aria-labelledby="adminSidebarLabel">
+
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="adminSidebarLabel">Administración</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                                data-bs-target="#adminSidebar" aria-label="Cerrar menú"></button>
+                    </div>
+
+                    {{-- CAMBIO 2: min-vh-100 se reemplaza por h-100 y overflow-y-auto --}}
+                    <div class="offcanvas-body d-flex flex-column p-3 h-100 overflow-y-auto">
+                        <a class="d-none d-lg-block text-body text-decoration-none fw-bold fs-5 mb-4"
+                        href="{{ $link('admin.dashboard') }}">
+                            Semana de Sistemas <span class="text-warning">2026</span>
+                        </a>
+
+                        <ul class="nav nav-pills flex-column gap-1">
+                            @foreach ($menu as $item)
+                                <li class="nav-item">
+                                    {{-- El enlace activo usa el color del pill; los demás, text-body --}}
+                                    <a class="nav-link {{ request()->routeIs($item['active']) ? 'active' : 'text-body' }}"
+                                    href="{{ $link($item['route']) }}">{{ $item['label'] }}</a>
+                                </li>
+                            @endforeach
+                            <li class="nav-item">
+                                <a class="nav-link text-body" href="{{ $link('blog.index') }}"
+                                target="_blank" rel="noopener">Ver el blog</a>
+                            </li>
+                        </ul>
+
+                        <div class="mt-auto pt-3 border-top">
+                            <div class="small mb-2">{{ auth()->user()->name ?? 'Usuario' }}</div>
+                            <form method="POST" action="{{ $link('logout') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Cerrar sesión</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
+            </aside>
+
+            {{-- ========== Contenido ========== --}}
+            <div class="col-lg-10 px-0">
+                <header class="d-flex align-items-center gap-3 bg-body border-bottom px-4 py-3">
+                    <button class="btn btn-outline-secondary d-lg-none" type="button"
+                            data-bs-toggle="offcanvas" data-bs-target="#adminSidebar"
+                            aria-controls="adminSidebar">Menú</button>
+
+                    <h1 class="h4 mb-0">@yield('heading', 'Panel')</h1>
+
+                    {{-- Botones de la página (ej. "Nueva entrada") --}}
+                    <div class="ms-auto">@yield('actions')</div>
+                </header>
+
+                <main class="p-4">
+                    @include('partials.flash')
+                    @yield('content')
+                </main>
             </div>
         </div>
-    </nav>
-
-    <div class="container pb-5">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @yield('content')
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
-</body>
-</html>
+@endsection
